@@ -249,6 +249,10 @@ looks like
         stap -I. -v -e 'probe querystart { println(probestr) }'
 
 (you need the binary in your path for the `process("memsqld")` part to work)
+(note that if you run this and get a horrifying compiler error, you may be on
+the wrong kernel version; e.g. I think I compiled my SystemTap on a 4.4 machine,
+tried running it 4.7, got a scary error, then rebooted into 4.4, and all was
+well).
 
 There also appears to be a new runtime for system tap that uses BPF [11].
 
