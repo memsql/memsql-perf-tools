@@ -1,0 +1,8 @@
+dbbench
+Copyright 2015-2016 MemSQL
+
+This product includes software developed at MemSQL (http://www.memsql.com/).
+
+The query_bio.py script is derived from Brendan Gregg and Allan McAleavy's BCC 
+script biosnoop.py.  The original code is available from:
+    https://github.com/iovisor/bcc/blob/master/tools/biosnoop.py
