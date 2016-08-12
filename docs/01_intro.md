@@ -252,6 +252,15 @@ looks like
 
 There also appears to be a new runtime for system tap that uses BPF [11].
 
+By creating a `.d` file with probe definitions in the System Tap language, and
+then passing this file through System Tap's `dtrace` tool with the proper
+incantations, it will give you a `.h` file you can include (rather than
+`sys/sdt.h` which will give you  macros with names that match the probe name.
+E.g., rather than the `DTRACE_PROBE2(provider, name, arg1, arg2)` as above, you
+have `MEMSQL_QUERY_START(arg1, arg2)`. The only difference in the ELF notes
+section is it appears there is a probe semaphore created, i.e., it has a
+non-null "Semaphore" entry.
+
 **See also:** [System Tap "Adding User Space Probing to an Application"
 page](https://sourceware.org/systemtap/wiki/AddingUserSpaceProbingToApps)
 
