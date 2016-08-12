@@ -133,7 +133,7 @@ is in `ProbeVisitor::VisitMemberExpr` in
 `bcc/src/cc/frontends/clang/b_frontend_action.cc`. Or you can just apply
 `patches/bcc/0002-remove-clang-rewriter-for-pointers.patch`.
 
-### `write(...) failed: Device or resource busy`
+### write(...) failed: Device or resource busy
 
 If you get an error like
 
