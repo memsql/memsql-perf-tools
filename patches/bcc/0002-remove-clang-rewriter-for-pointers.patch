@@ -1,0 +1,43 @@
+From ef3f2bb531e384c5ccdcceb8a7b89e0b0d021080 Mon Sep 17 00:00:00 2001
+From: Kyle Laracey <kyle@memsql.com>
+Date: Fri, 12 Aug 2016 11:20:35 -0700
+Subject: [PATCH] remove clang rewriter for pointers
+
+---
+ src/cc/frontends/clang/b_frontend_action.cc | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/src/cc/frontends/clang/b_frontend_action.cc b/src/cc/frontends/clang/b_frontend_action.cc
+index d4734c7..33da334 100644
+--- a/src/cc/frontends/clang/b_frontend_action.cc
++++ b/src/cc/frontends/clang/b_frontend_action.cc
+@@ -234,15 +234,17 @@ bool ProbeVisitor::VisitMemberExpr(MemberExpr *E) {
+   }
+   if (!found)
+     return true;
+-  string rhs = rewriter_.getRewrittenText(SourceRange(rhs_start, E->getLocEnd()));
+-  string base_type = base->getType()->getPointeeType().getAsString();
+-  string pre, post;
+-  pre = "({ typeof(" + E->getType().getAsString() + ") _val; memset(&_val, 0, sizeof(_val));";
+-  pre += " bpf_probe_read(&_val, sizeof(_val), (u64)";
+-  post = " + offsetof(" + base_type + ", " + rhs + ")";
+-  post += "); _val; })";
+-  rewriter_.InsertText(E->getLocStart(), pre);
+-  rewriter_.ReplaceText(SourceRange(op, E->getLocEnd()), post);
++  // string rhs = rewriter_.getRewrittenText(SourceRange(rhs_start, E->getLocEnd()));
++  // printf("rewritten E: %s\n", rewriter_.getRewrittenText(SourceRange(E->getLocStart(), E->getLocEnd())).c_str());
++  // printf("rhs: %s\n", rhs.c_str());
++  // string base_type = base->getType()->getPointeeType().getAsString();
++  // string pre, post;
++  // pre = "({ typeof(" + E->getType().getAsString() + ") _val; memset(&_val, 0, sizeof(_val));";
++  // pre += " bpf_probe_read(&_val, sizeof(_val), (u64)";
++  // post = " + offsetof(" + base_type + ", " + rhs + ")";
++  // post += "); _val; })";
++  // rewriter_.InsertText(E->getLocStart(), pre);
++  // rewriter_.ReplaceText(SourceRange(op, E->getLocEnd()), post);
+   return true;
+ }
+ 
+-- 
+2.7.4 (Apple Git-66)
+

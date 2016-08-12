@@ -10,6 +10,8 @@ the general public as some basic examples of BPF and BCC.
 
 `tools/` contains the BPF/BCC programs
 
+`patches/` includes some patches for BCC to get some of my tools working
+
 Documentation
 --------------------------------------------------------------------------------
 

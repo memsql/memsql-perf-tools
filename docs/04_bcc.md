@@ -36,6 +36,9 @@ busy, but they are quite receptive to questions and feature requests.
 There is some overlap between this document and the [MemSQL BPF documentation]
 (02_bpf.md). 
 
+There were some issues I had with the BCC. I had to make a few modifications to
+get some things to work; they are included in the `patches/` directory. 
+
 Writing Scripts
 --------------------------------------------------------------------------------
 
@@ -127,7 +130,47 @@ of a GCC statement expression (a code block), which is an rvalue.
 To get rid of this, you can modify the BCC library by just gutting the rewriter
 capability related to this and building the binary from source. Specifically, it
 is in `ProbeVisitor::VisitMemberExpr` in
-`bcc/src/cc/frontends/clang/b_frontend_action.cc`. 
+`bcc/src/cc/frontends/clang/b_frontend_action.cc`. Or you can just apply
+`patches/bcc/0002-remove-clang-rewriter-for-pointers.patch`.
+
+### `write(...) failed: Device or resource busy`
+
+If you get an error like
+
+    write(/sys/kernel/debug/tracing/uprobe_events, "p:uprobes/p__Volumes_developer_memsql_debug_memsqld_0xffffffffffc0000c /Volumes/developer/memsql/debug/memsqld:0xffffffffffc0000c") failed: Device or resource busy
+    Traceback (most recent call last):
+      File "./query_memory.py", line 138, in <module>
+        b = BPF(text=text, debug=debug, usdt=u)
+      File "/Volumes/developer/bcc/src/python/bcc/__init__.py", line 199, in __init__
+        if usdt: usdt.attach_uprobes(self)
+      File "/Volumes/developer/bcc/src/python/bcc/usdt.py", line 48, in attach_uprobes
+        bpf.attach_uprobe(name=binpath, fn_name=fn_name, addr=addr, pid=pid)
+      File "/Volumes/developer/bcc/src/python/bcc/__init__.py", line 607, in attach_uprobe
+        raise Exception("Failed to attach BPF to uprobe")
+    Exception: Failed to attach BPF to uprobe
+
+this may be because the probe shows up multiple times in the ELF notes section 
+with the same address. E.g., you look in the notes section and find something 
+like:
+
+    /Volumes/developer/memsql/debug/memsqld memsqld:execstats_addmemoryuse [sema 0x0]
+      location 0x14fae90 raw args: 8@-16(%rbp)
+        8 unsigned bytes @ -16(%rbp)
+      location 0xc raw args: 8@-16(%rbp)
+        8 unsigned bytes @ -16(%rbp)
+      location 0xc raw args: 8@-16(%rbp)
+        8 unsigned bytes @ -16(%rbp)
+      location 0xc raw args: 8@-16(%rbp)
+        8 unsigned bytes @ -16(%rbp)
+      location 0xc raw args: 8@-16(%rbp)
+        8 unsigned bytes @ -16(%rbp)
+
+Clearly something has gone wrong with the USDT macro: `0xc` does not make sense
+as a valid offset. This, actually, is not the cause of the error above; it turns 
+out you can attach a uprobe here without a problem. This issue is attaching 
+__multiple times__. Apply 
+`patches/bcc/0001-duplicate-low-probe-address-handling.patch` to resolve this 
+issue.
 
 Interesting BCC Scripts
 --------------------------------------------------------------------------------
@@ -169,7 +212,6 @@ is another BCC tracer tool.
 
     # tracing with bcc/trace:
     sudo PATH=$PATH:/Volumes/developer/memsql/debug/ trace 'u:memsqld:querystart "%s", arg1'
-
 
 
 Bibliography

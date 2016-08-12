@@ -27,7 +27,7 @@ what the kernel is doing, but has since evolved from that to be an interface to
 krobes, uprobes, and static tracepoints. See [3] for more information. Ftrace is
 pretty neat, and may be useful for performance investigations in its own right.
 
-It's interface is through the `/sys/kernel/debug/tracing` filesystem. It is
+Its interface is through the `/sys/kernel/debug/tracing` filesystem. It is
 useful if you need to debug your BPF script -- e.g., maybe it seems like your
 probe isn't firing. You can set a kprobe manually through the ftrace filesystem
 interface to see if it fires there, and isolate whether it is just your BPF
@@ -35,24 +35,24 @@ script (or the BPF subsystem and tooling) *or* the system itself (e.g. maybe the
 function you are probing on got inlined). 
 
 It looks like ftrace might support userland stacktraces with the
-`userstacktrace` option:
+`userstacktrace` option [3]:
 
     This option changes the trace. It records a stacktrace of the current
-    userspace thread. [3]
+    userspace thread. 
 
-Sounds like ftrace supports tracing on a single thread:
-
-    Documentation/trace/ftrace.txt describes how to enable events on a
-    per-thread basis using set_ftrace_pid. [3]
+Sounds like ftrace supports tracing on a single thread. The documentation 
+describes how to enable events on a per-thread basis using set_ftrace_pid [3].
 
 ### Kprobes
 
 Kprobes are probes in the Linux kernel which can be placed on almost any
 function (and also function return, called "kretprobes"). BPF scripts can be
-attached to krobes and kretprobes. Do not use the C interface defined in the
-kernel documentation for kprobes [4]. Instead, just use the ftrace interface
-defined in the aforementioned kernel documentation for ftrace [3]. It's
-`/sys/kernel/debug/kprobes` and 
+attached to krobes and kretprobes. 
+
+If you are going to use kprobes on their own (without BPF and BCC), do not use 
+the C interface defined in the kernel documentation for kprobes [4]. Instead,
+just use the ftrace interface defined in the aforementioned kernel documentation
+for ftrace [3]. It's `/sys/kernel/debug/kprobes` and
 `/sys/kernel/debug/tracing/kprobe_{events,profile}`.
 
 Note that there is a blacklist for kprobes, that is, functions which are not
@@ -67,25 +67,27 @@ see Brendan Gregg's article [5] and the uprobe tracer kernel documentation [6].
 Uprobes have a similar interface to kprobes regarding the filesystem, but have a
 more complicated signature syntax. This syntax is exposed in different ways
 (e.g. compare Brendan Gregg's tool in the aforementioned article [5] to BCC's
-`argdist` [7]).
+`argdist` [7] and to the syntax in the uprobe documentation [6]).
 
 ### Static Tracepoints
 
 Kernel static tracepoints are a workaround for the few functions that are on the
-blacklist, and actually make tracing a lot easier. They are placed at strategic
+kprobes blacklist, and actually make tracing a lot easier. They are placed at strategic
 locations throughout the kernel and, unlike the kernel structure of function
 names and function calls, are stable. They look kind of like USDT probes, in
-that they have a sort of 'group', a 'name', and parameters you can access. Very
-useful. As of 4.7 you can attach BPF programs to them. See [8] and [9] and [10].
+that they have a sort of 'group' (AKA 'provider' or subsystem), a 'name', and parameters you can access. Very
+useful. As of 4.7 you can attach BPF programs to them. See [8], [9] and [10].
 
 USDT
 --------------------------------------------------------------------------------
 
 "Userland Dynamic Tracing." A technique pioneered by DTrace to bring dynamic
 tracing to userland whereby a small macro is added to the source code at the
-probe point. Information is added to the ELF `.notes` section (which can be read
-with `readelf -n`) which contains information like the offset of each location
-of probe in the binary, where it's parameters are, etc. 
+probe point. On the surface, it looks similar to kernel static tracepoint
+macros. Unlike kernel static tracepoints, USDT macros include a directive to the
+linker to include information in the ELF `.notes` section (which can be read
+with `readelf -n` or BCC's `tplist`) which contains information like the offset
+of each location of probe in the binary, where its parameters are, etc. 
 
 There is SystemTap support for these as well (see below).
 
@@ -100,8 +102,8 @@ The macro is something like
 
     DTRACE_MACRO2(memsqld, querystart, query, planid);
 
-This macro resolves to a few mov instructions to setup the arguments for the
-macro, and then a nop instruction.  When a dynamic tracer (such as a BPF,
+This macro resolves to a few `mov` instructions to setup the arguments for the
+macro, and then a `nop` instruction.  When a dynamic tracer (such as a BPF,
 SystemTap, or Dtrace script) is attached to the process, this nop instruction is
 replaced by a trap into the kernel to trigger the instrumentation code. The
 instrumentation code can access the probe's parameters.
@@ -122,7 +124,8 @@ To list the probes in a binary nicely, you can use the BCC tool [`tplist`]
 
     tplist -l [-v] -p $(pidof memsqld)
 
-Here is the disassembly of the area around a probe:
+Here is the disassembly of the area around a probe. One of this probe's
+arguments requires a method call. Probe's arguments are passed in registers.
 
 Without probe enabled:
 
@@ -150,7 +153,10 @@ generate a probe parameter; e.g., make a function call, or what have you. It is
 possible to disable this computation unless a dynamic tracing tool is actually
 attached to the probe. There is a small flag in the binary, referred to as the
 probe's "semaphore" which can be set to enable or disable this computation at
-runtime. Not sure what the status of this is in BPF. 
+runtime. (__Note that in the dynamic tracing community, or maybe specifically
+the System Tap and BPF communities, "enabling" a probe means setting its
+semaphore, not just normally using a regular probe.__) Not sure what the status
+of semaphores is in BPF. 
 
 But I think we can probably avoid semaphore-guarded static-tracepoints, at least
 initially. Such probes are supposed to be used when the arguments to the probe
@@ -158,13 +164,33 @@ are expensive and dynamically constructed, but, taking the query start and stop
 probes as an example, the query string is already there, we just need the probe
 to take one `char*` argument which points to that query string.
 
+For reference, here is a portion of the ELF notes section:
+
+    $ tplist -vl /var/lib/memsql/memsqld
+    /Volumes/developer/memsql/debug/memsqld memsqld:queryend [sema 0x0]
+      location 0x188cba2 raw args: 8@%rbx -8@%rax
+        8 unsigned bytes @ register %rbx
+        8   signed bytes @ register %rax
+    
+    /Volumes/developer/memsql/debug/memsqld memsqld:backgroundflusher [sema 0x0]
+      location 0x18b4936 raw args:
+    
+    /Volumes/developer/memsql/debug/memsqld memsqld:beginsnapshot [sema 0x0]
+      location 0x3114992 raw args: 8@%rax 8@-1400(%rbp)
+        8 unsigned bytes @ register %rax
+        8 unsigned bytes @ -1400(%rbp)
+
+Note that there is an issue with USDT where sometimes a probe has multiple
+locations with the same address, typically a unreasonably low address. For more
+info and a fix, see the [MemSQL BCC page](04_bcc.md).
+
 ### See Also
 * SystemTap Wiki page on the implementation of user-space probes [13]. 
 * SystemTap Wiki page on adding user-space probes to programs [12].
 * the SystemTap section below
 * [Sasha Goldshtein's blog post] 
   (http://blogs.microsoft.co.il/sasha/2016/03/30/usdt-probe-support-in-bpfbcc/)
-  from when he originally added USDT support to BCC.
+  from when he originally added USDT support to BCC. [15]
 
 GDB
 --------------------------------------------------------------------------------
@@ -186,8 +212,8 @@ E.g.:
     [snip]
 
 I had a little difficulty with GDB detaching from `mysqld` if you run `info
-probes` from the interactive prompt, so I recommend doing  
-`sudo gdb -batch -pid $(pidof mysqld) -ex "info probe"`.
+probes` from the interactive prompt, so I recommend doing  `sudo gdb -batch 
+-pid $(pidof mysqld) -ex "info probe"`.
 
 Breaking on the probe in gdb seems to cause a segfault, as in:
 
@@ -252,3 +278,4 @@ Bibliography
 * [12] [System Tap, "Adding User Space Probing to an Application"](https://sourceware.org/systemtap/wiki/AddingUserSpaceProbingToApps)
 * [13] [System Tap, "User Space Probe Implementation"](https://sourceware.org/systemtap/wiki/UserSpaceProbeImplementation)
 * [14] [GDB Static Probe Points Documentation](https://github.com/iovisor/bcc/blob/master/tools/tplist_example.txt)
+* [15] [Sasha Goldshtein's post when he added USDT to BCC](http://blogs.microsoft.co.il/sasha/2016/03/30/usdt-probe-support-in-bpfbcc/)

@@ -2,23 +2,27 @@ Kernel Documentation for Writing BPF Scripts
 ================================================================================
 
 Here are some notes on the kernel with regards to tracing. Currently, there are
-only my notes on the scheduler and some info on locks. 
+only my notes on the scheduler and some info on locks. They are derived from the
+4.7 sources.
 
 Scheduler
 --------------------------------------------------------------------------------
 
-A `sched_entity` or scheduler entity is a unit of scheduling which can be
-larger than a task; for instance, it may make sense to group together a group
-of tasks which are part of a compilation process, or all the processes of a
-single user. This is accomplished by the `sched_entity` abstraction. 
+This section concerns the Completely Fair Scheduler (CFS) structure in 4.7.  A
+`sched_entity` or scheduler entity is a unit of scheduling which can be larger
+than a task; for instance, it may make sense to group together a group of tasks
+which are part of a compilation process, or all the processes of a single user.
+This is accomplished by the `sched_entity` abstraction. 
 
 A `sched_entity` can also simply wrap a single task: see 
-`fair.c:entity_is_task(se)` which just checks if the `sched_entity` has a rq. 
+`fair.c:entity_is_task(se)` which just checks if the `sched_entity` has a `rq`. 
 
 `sched_entity` has a field *`prev_sum_exec_runtime`*: "used for storing the 
 previous run time of a process.  When it is taken off the CPU, 
 *`sum_exec_runtime`* is copied into this variable. The information will be later
 used by the scheduler. Note, that `sum_exec_runtime` is not reset." [1].
+
+### Important Function Pointers in the Sched Class Struct
 
 `kernel/sched/fair.c` defines `fair_sched_class` with all the high-level
 important function pointers. Ishkov's [1] definitions are taken from [2]. 
@@ -34,21 +38,23 @@ function          | purpose
 *`set_curr_task`*: | this function is called when a task changes its scheduling class or task group 
 *`task_tick`*: | "mostly called from time tick functions; it might lead to process switch. This drives the running preemption" 
 
-Important perf sched events (and their locations):
+### Important perf sched events (and their locations):
 
  event | location  
 :------|:--------
-`sched:sched_stat_blocked`    | (enqueue_sleeper, in the block branch)
-`sched:sched_stat_iowait`     | (enqueue_sleeper, in the block & iowait branch)
-`sched:sched_stat_runtime`    | (update_curr, if the `sched_entity` is a task)
-`sched:sched_stat_sleep`      | (enqueue_sleeper, in the sleep branch)
-`sched:sched_stat_wait`       | (update_stats_wait_end, if `se` is a task)
-`sched:sched_switch`          | (prepare_switch, called from context_switch)
-`sched:sched_wait_task`       | (wait_task_inactive)
-`sched:sched_wakeup`          | (ttwu_do_wakup)
+`sched:sched_stat_blocked`    | (`enqueue_sleeper`, in the block branch)
+`sched:sched_stat_iowait`     | (`enqueue_sleeper`, in the block & iowait branch)
+`sched:sched_stat_runtime`    | (`update_curr`, if the `sched_entity` is a task)
+`sched:sched_stat_sleep`      | (`enqueue_sleeper`, in the sleep branch)
+`sched:sched_stat_wait`       | (`update_stats_wait_end`, if `se` is a task)
+`sched:sched_switch`          | (`prepare_switch`, called from context_switch)
+`sched:sched_wait_task`       | (`wait_task_inactive`)
+`sched:sched_wakeup`          | (`ttwu_do_wakup`)
 `sched:sched_waking`          | <appears to be missing>
 
-**`enqueue_sleeper`**
+### Details on important functions
+
+#### `enqueue_sleeper`
 
 Tracepoints: `sched_stat_blocked`, `sched_stat_iowait`, `sched_stat_sleep`
 
@@ -75,7 +81,7 @@ From the tracepoint event declarations:
     are USUALLY waiting for I/O following a page fault" [4].
 
 
-**`update_curr`**
+#### `update_curr`
 
 Tracepoints: `sched_stat_runtime(curtask, delta_exec, curr_vruntime)`
 
@@ -84,7 +90,7 @@ Taken from the event class declaration (`include/trace/events/sched.h:371`).
 Supposedly, `runtime` (AKA `delta_exec`) and `vruntime` are both measured in
 "ns". (from event declaration)
 
-**`update_stats_wait_end`**
+#### `update_stats_wait_end`
 
 Tracepoints: `sched_stat_wait(task, delay)`
 
@@ -108,7 +114,7 @@ is runnable but not actually running due to scheduler contention)".
 
 So it sounds like 'wait' is the same as 'runnable'. 
 
-**`prepare_task_switch`**
+#### `prepare_task_switch`
 
 Tracepoints: `sched_switch`
 
@@ -264,12 +270,13 @@ It also looks like there are tracepoints for filelock, but nothing else.
 Note that you may be tempted to trace on `lock_acquire`, but that is a lockdep
 function [5] which I don't think is what we want. 
 
-Useful:
-https://events.linuxfoundation.org/sites/events/files/slides/linuxcon-2014-locking-final.pdf
-http://www.linuxgrill.com/anonymous/fire/netfilter/kernel-hacking-HOWTO-5.html
+### See Also:
+* https://events.linuxfoundation.org/sites/events/files/slides/linuxcon-2014-locking-final.pdf
+* http://www.linuxgrill.com/anonymous/fire/netfilter/kernel-hacking-HOWTO-5.html
 
-NB: Semaphore can only be used in user context, because they sleep, which makes
-sense. 
+NB: Semaphore can only be used in [user context]
+(http://www.linuxgrill.com/anonymous/fire/netfilter/kernel-hacking-HOWTO-2.html), 
+because they sleep, which makes sense. 
 
 Bibliography
 --------------------------------------------------------------------------------

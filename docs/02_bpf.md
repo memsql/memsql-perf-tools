@@ -34,7 +34,7 @@ Programming Style + API
 
 *See Also: the BCC docs and tutorials written [4]*
 
-The programming style for these scripts is really "C-in-Python" sort of thing.
+The programming style for these scripts is really a "C-in-Python" sort of thing.
 You will have a Python multi-line string that contains the C instrumentation
 code, the Python will perform substitutions in the C code based on arguments to
 the Python script, set up the probes, etc. See the documentation regarding BCC
@@ -48,7 +48,7 @@ functions you define that are to be called by functions attached to probes must
 be `static inline`. You also cannot access any memory off your stack without a
 call to `bpf_probe_read` (sort of like `copy_to_user` and `copy_from_user`, if
 you are familiar with those) (note that some calls to `bpf_probe_read` can be
-elided; see the [page on BCC](04_bcc.md)).
+elided; see the [MemSQL page on BCC](04_bcc.md)).
 
 ### Kernel Headers
 You have access to the exported kernel headers, e.g. things in the `include/`
@@ -62,6 +62,9 @@ issue 622 [6], there is a way to get the internal headers like `sched.h`:
 > Include of sched.h is possible if 'build' and 'source' dirs are known. Most
 > likely something like include "../../kernel/sched/sched.h" should have
 > worked.
+
+but it sounds like you will need to have the sources for the kernel you are
+running (with all distribution patches applied, etc.).
 
 ### BPF Helper Functions
 
@@ -172,7 +175,8 @@ BCC issue 212 [6].
 
 To understand messages the verifier gives you, see the kernel documentation
 `Documentation/networking/filter.txt` under the section 'Understanding eBPF
-verifier messages' [2].
+verifier messages' [2]. Also see the [BCC Docs]
+(https://github.com/iovisor/bcc/tree/master/docs) [4].
 
 
 See Also

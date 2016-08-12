@@ -1,0 +1,56 @@
+From 5b4b50d01b214aecc4972ebd4b551f342fc09a10 Mon Sep 17 00:00:00 2001
+From: Kyle Laracey <kyle@memsql.com>
+Date: Fri, 12 Aug 2016 11:18:49 -0700
+Subject: [PATCH] duplicate low probe address handling
+
+---
+ src/cc/usdt.cc         | 5 +++++
+ src/python/bcc/usdt.py | 5 ++++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/cc/usdt.cc b/src/cc/usdt.cc
+index a469eea..a274615 100644
+--- a/src/cc/usdt.cc
++++ b/src/cc/usdt.cc
+@@ -14,6 +14,7 @@
+  * limitations under the License.
+  */
+ #include <cstring>
++#include <set>
+ #include <sstream>
+ 
+ #include <fcntl.h>
+@@ -168,12 +169,16 @@ bool Probe::usdt_getarg(std::ostream &stream) {
+       stream << "\n  return 0;\n}\n";
+     } else {
+       stream << "  switch(ctx->ip) {\n";
++      std::set<uint64_t> seen;
+       for (Location &location : locations_) {
+         uint64_t global_address;
+ 
+         if (!resolve_global_address(&global_address, location.address_))
+           return false;
+ 
++        if (seen.count(global_address) > 0) continue;
++        seen.insert(global_address);
++
+         tfm::format(stream, "  case 0x%xULL: ", global_address);
+         if (!location.arguments_[arg_n].assign_to_local(stream, cptr, bin_path_,
+                                                         pid_))
+diff --git a/src/python/bcc/usdt.py b/src/python/bcc/usdt.py
+index 98d87b8..2b6ab40 100644
+--- a/src/python/bcc/usdt.py
++++ b/src/python/bcc/usdt.py
+@@ -41,5 +41,8 @@ class USDT(object):
+ 
+         lib.bcc_usdt_foreach_uprobe(self.context, _USDT_CB(_add_probe))
+ 
++        seen = set()
+         for (binpath, fn_name, addr, pid) in probes:
+-            bpf.attach_uprobe(name=binpath, fn_name=fn_name, addr=addr, pid=pid)
++            if addr not in seen:
++                seen.add(addr)
++                bpf.attach_uprobe(name=binpath, fn_name=fn_name, addr=addr, pid=pid)
+-- 
+2.7.4 (Apple Git-66)
+
