@@ -167,8 +167,8 @@ like:
 
 Clearly something has gone wrong with the USDT macro: `0xc` does not make sense
 as a valid offset. This, actually, is not the cause of the error above; it turns 
-out you can attach a uprobe here without a problem. This issue is attaching 
-__multiple times__. Apply 
+out you can attach a uprobe here without a problem. The issue is actually just
+attaching to the same probe at the same location multiple times. Apply 
 `patches/bcc/0001-duplicate-low-probe-address-handling.patch` to resolve this 
 issue.
 
