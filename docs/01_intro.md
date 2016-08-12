@@ -259,7 +259,9 @@ incantations, it will give you a `.h` file you can include (rather than
 E.g., rather than the `DTRACE_PROBE2(provider, name, arg1, arg2)` as above, you
 have `MEMSQL_QUERY_START(arg1, arg2)`. The only difference in the ELF notes
 section is it appears there is a probe semaphore created, i.e., it has a
-non-null "Semaphore" entry.
+non-null "Semaphore" entry. In order to get the names of the probes, you need to
+create a separate "tap set" file (`.stp`); the Solaris/DTrace analogy to this
+is called a Provider Support File, I believe. 
 
 **See also:** [System Tap "Adding User Space Probing to an Application"
 page](https://sourceware.org/systemtap/wiki/AddingUserSpaceProbingToApps)
