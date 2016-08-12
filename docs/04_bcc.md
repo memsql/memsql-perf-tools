@@ -66,7 +66,8 @@ is used as an argument when attaching to a USDT probe.
 
 USDT probes have a separate data structure, called a `USDT`. In earlier versions
 of BCC, there were several objects, like `USDTReader`, `USDTArgument`,
-`USDTProbe`, etc. The place to look is `bcc/src/python/bcc/usdt.py`.
+`USDTProbe`, etc. The place to look is [`bcc/src/python/bcc/usdt.py`]
+(https://github.com/iovisor/bcc/blob/master/src/python/bcc/usdt.py).
 
 ### Filtering by Plan ID
 
@@ -130,8 +131,11 @@ of a GCC statement expression (a code block), which is an rvalue.
 To get rid of this, you can modify the BCC library by just gutting the rewriter
 capability related to this and building the binary from source. Specifically, it
 is in `ProbeVisitor::VisitMemberExpr` in
-`bcc/src/cc/frontends/clang/b_frontend_action.cc`. Or you can just apply
-`patches/bcc/0002-remove-clang-rewriter-for-pointers.patch`.
+[`bcc/src/cc/frontends/clang/b_frontend_action.cc`]
+(https://github.com/iovisor/bcc/blob/master/src/cc/frontends/clang/b_frontend_action.cc). 
+Or you can just apply
+[`patches/bcc/0002-remove-clang-rewriter-for-pointers.patch`]
+(/patches/bcc/0002-remove-clang-rewriter-for-pointers.patch).
 
 ### write(...) failed: Device or resource busy
 
@@ -169,7 +173,8 @@ Clearly something has gone wrong with the USDT macro: `0xc` does not make sense
 as a valid offset. This, actually, is not the cause of the error above; it turns 
 out you can attach a uprobe here without a problem. The issue is actually just
 attaching to the same probe at the same location multiple times. Apply 
-`patches/bcc/0001-duplicate-low-probe-address-handling.patch` to resolve this 
+[`patches/bcc/0001-duplicate-low-probe-address-handling.patch`]
+(/patches/bcc/0001-duplicate-low-probe-address-handling.patch) to resolve this 
 issue.
 
 Interesting BCC Scripts
