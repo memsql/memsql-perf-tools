@@ -1,10 +1,9 @@
 BPF Scripts
 ================================================================================
 
-This repository contains the dynamic tracing scripts and documentation developed
-over the past few months at MemSQL. It is mainly geared towards MemSQL
-performance engineers who may want to write BPF scripts, but it may be useful to
-the general public as some basic examples of BPF and BCC.
+This repository contains the dynamic tracing scripts and documentation about BPF and BCC.
+It is mainly geared towards MemSQL performance engineers who may want to write BPF scripts, 
+but it may be useful to the general public as some basic examples of BPF and BCC.
 
 `docs/` contains various text files including notes and presentations.
 
@@ -34,9 +33,9 @@ Tools
 --------------------------------------------------------------------------------
 
 These scripts vary in their level of completion. Note also that these tools are
-meant primarily as a resource for people looking to use BCC / BPF. Current 
-versions of MemSQL do not ship with USDT probes and do not work with these
-scripts, only an internal development version.
+meant primarily as a resource for people looking to use BCC / BPF. Support for 
+USDT probes in MemSQL is experimental and versions of MemSQL earlier than 5.1.3
+do not support any USDT probes.   
 
 Scripts that work:
 
@@ -55,7 +54,7 @@ Scripts that don't work:
   augmented to support filtering based on query.  
 * `query_tsa.py` - A script for thread-state analysis. For some
   reason, some of the important probe instrumentation appears not to be firing.
-  Uses kernel tracepoints, and thus requires version >= 4.7
+  Uses kernel tracepoints, and thus requires Linux version >= 4.7
 * `query_tsa_old.py` - Like `query_tsa.py`, but does not use tracepoints, and is
   in less of a working state. 
 
