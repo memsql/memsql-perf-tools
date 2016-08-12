@@ -141,7 +141,7 @@ Or you can just apply
 
 If you get an error like
 
-    write(/sys/kernel/debug/tracing/uprobe_events, "p:uprobes/p__Volumes_developer_memsql_debug_memsqld_0xffffffffffc0000c /Volumes/developer/memsql/debug/memsqld:0xffffffffffc0000c") failed: Device or resource busy
+    write(/sys/kernel/debug/tracing/uprobe_events, "p:uprobes/p__var_lib_memsql_memsqld_0xffffffffffc0000c /var/lib/memsql/memsqld:0xffffffffffc0000c") failed: Device or resource busy
     Traceback (most recent call last):
       File "./query_memory.py", line 138, in <module>
         b = BPF(text=text, debug=debug, usdt=u)
@@ -157,7 +157,7 @@ this may be because the probe shows up multiple times in the ELF notes section
 with the same address. E.g., you look in the notes section and find something 
 like:
 
-    /Volumes/developer/memsql/debug/memsqld memsqld:execstats_addmemoryuse [sema 0x0]
+    /var/lib/memsql/memsqld memsqld:execstats_addmemoryuse [sema 0x0]
       location 0x14fae90 raw args: 8@-16(%rbp)
         8 unsigned bytes @ -16(%rbp)
       location 0xc raw args: 8@-16(%rbp)
@@ -185,22 +185,22 @@ Interesting BCC Scripts
 interesting tracing tool. One-liners that seem to work:
 
     # to print out each query as it is executed
-    sudo PATH=$PATH:/Volumes/developer/memsql/debug/ argdist -v -C "u:memsqld:querystart(char* arg1):char*:arg1"
+    sudo PATH=$PATH:/var/lib/memsql/ argdist -v -C "u:memsqld:querystart(char* arg1):char*:arg1"
 
     # to print out a histogram of the cumulative query latencies:
-    sudo PATH=$PATH:/Volumes/developer/memsql/debug/ argdist -v -H "u:memsqld:que ryend(u64 arg1):u64:arg1"
+    sudo PATH=$PATH:/var/lib/memsql/ argdist -v -H "u:memsqld:queryend(u64 arg1):u64:arg1"
 
 Adding a simple probe to the background flusher's loop, I get the thread IDs of
 the background flusher threads every time they run:
 
-    sudo PATH=$PATH:/Volumes/developer/memsql/debug/ argdist -v -C 'u:memsqld:backgroundflusher():u32:$PID'
+    sudo PATH=$PATH:/var/lib/memsql/ argdist -v -C 'u:memsqld:backgroundflusher():u32:$PID'
 
 This showed me that the background flusher thread runs every 5 seconds. Funny
 that dynamic tracing can be used as sort of a learning tool.
 
 Added a probe to `SnapshotAndLogManager::BeginSnapshot`, and you can trace with
 
-    sudo PATH=$PATH:/Volumes/developer/memsql/debug/ argdist -v -C 'u:memsqld:beginsnapshot(char*, char*):u32:$PID'
+    sudo PATH=$PATH:/var/lib/memsql/ argdist -v -C 'u:memsqld:beginsnapshot(char*, char*):u32:$PID'
 
 or replace the tail with
 
@@ -216,7 +216,7 @@ similar things for the error probe.
 is another BCC tracer tool.  
 
     # tracing with bcc/trace:
-    sudo PATH=$PATH:/Volumes/developer/memsql/debug/ trace 'u:memsqld:querystart "%s", arg1'
+    sudo PATH=$PATH:/var/lib/memsql/ trace 'u:memsqld:querystart "%s", arg1'
 
 
 Bibliography
