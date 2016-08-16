@@ -109,7 +109,7 @@ replaced by a trap into the kernel to trigger the instrumentation code. The
 instrumentation code can access the probe's parameters.
 
 To add a probe, you must `#include <sys/sdt.h>`. This header requires the
-Systemtap development package which has been added to the Dockerfile. Note that
+Systemtap development package. Note that
 there is no dependency whatsoever on Systemtap itself other than this simple
 header file which defines a few standard macros used by many tools.
 
@@ -248,6 +248,10 @@ looks like
         stap -I. -v -e 'probe querystart { println(probestr) }'
 
 (you need the binary in your path for the `process("memsqld")` part to work)
+(note that if you run this and get a horrifying compiler error, you may be on
+the wrong kernel version; e.g. I think I compiled my SystemTap on a 4.4 machine,
+tried running it 4.7, got a scary error, then rebooted into 4.4, and all was
+well).
 
 There also appears to be a new runtime for system tap that uses BPF [11].
 
