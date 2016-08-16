@@ -195,8 +195,7 @@ info and a fix, see the [MemSQL BCC page](04_bcc.md).
 GDB
 --------------------------------------------------------------------------------
 
-Amazingly, GDB continues to have features added to it. It marches forward
-against all odds.  
+GDB continues to have features added to it.
 
 `info probes` will show the names of all STPs (statically-defined probes) in
 the attached binary. You can `enable` and `disable` probes, presumably to break

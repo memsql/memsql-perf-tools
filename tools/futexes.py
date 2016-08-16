@@ -93,8 +93,8 @@ if args.planid is not None:
 """
 int querystart(struct pt_regs *ctx, int __loc_id)
 {
-    u64 arg2;
-    bpf_usdt_readarg(2, ctx, &arg2);
+    u64 planid;
+    bpf_usdt_readarg(4, ctx, &planid);
 
     PLANID_FILTER
 
@@ -118,7 +118,7 @@ int queryend(struct pt_regs *ctx, int __loc_id)
 }
 """
     replacements["PLANID_FILTER"] = \
-            "if (%s != %sULL) return 0;" % ("arg2", args.planid)
+            "if (%s != %sULL) return 0;" % ("planid", args.planid)
     replacements["FUTEX_FILTER"] = " if (!tracing.lookup(&pid)) return 0;"
     replacements["STORAGE"] += "\nBPF_HISTOGRAM(duration, u32);"
     replacements["FUTEX_COLLECT"] = \
@@ -130,8 +130,8 @@ int queryend(struct pt_regs *ctx, int __loc_id)
         duration.update(&pid, &delta);
 """
     u = USDT(path=args.bin_path)
-    u.enable_probe(probe="querystart", fn_name="querystart")
-    u.enable_probe(probe="queryend", fn_name="queryend")
+    u.enable_probe(probe="query__start", fn_name="querystart")
+    u.enable_probe(probe="query__done", fn_name="queryend")
     if args.histogram:
         replacements["QUERYEND_COLLECT"] = \
             "if (dur) hist.increment(bpf_log2l(*dur));"

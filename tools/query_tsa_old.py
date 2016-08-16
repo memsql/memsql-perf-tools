@@ -386,7 +386,7 @@ struct rq {
 int querystart(struct pt_regs *ctx, int __loc_id)
 {
     u64 arg2;
-    bpf_usdt_readarg(2, ctx, &arg2);
+    bpf_usdt_readarg(4, ctx, &arg2);
 
     PLANID_FILTER
 
@@ -532,8 +532,8 @@ int queryend(struct pt_regs *ctx, int __loc_id)
 """
 
 u = USDT(path=args.bin_path)
-u.enable_probe(probe="querystart", fn_name="querystart")
-u.enable_probe(probe="queryend", fn_name="queryend")
+u.enable_probe(probe="query__start", fn_name="querystart")
+u.enable_probe(probe="query__done", fn_name="queryend")
 
 replacements = {}
 

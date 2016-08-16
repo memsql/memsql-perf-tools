@@ -34,17 +34,17 @@ PROBES
 """
 
 probe_names = [
-        "AsyncCreateTableFinishWorker",
-        "RestoreFinishWorker",
-        "RestoreStartWorker",
-        "RepointWorker",
-        "DropPartitionWorker",
-        "DropInstanceWorker",
-        "ReforgeWorker",
-        "AsyncCreateTAbleStartWorker",
-        "DropTableWorker",
-        "FailoverWorker",
-        "CreateOrCopyWorker"]
+        "async__create__table__finish__worker",
+        "restore__finish__worker",
+        "restore__start__worker",
+        "repoint__worker",
+        "drop__partition__worker",
+        "drop__instance__worker",
+        "reforge__worker",
+        "async__create__table__start__worker",
+        "drop__table__worker",
+        "failover__worker",
+        "create__or__copy__worker"]
 
 probe_text = \
 """

@@ -42,13 +42,12 @@ BPF_HASH(memory, u32);  // pid -> memory used
 int querystart(struct pt_regs *ctx)
 {
     u64 arg2;
-    bpf_usdt_readarg(2, ctx, &arg2);
+    bpf_usdt_readarg(4, ctx, &arg2);
 
     PLANID_FILTER
 
     u64 start_ts = bpf_ktime_get_ns();
     u32 pid = bpf_get_current_pid_tgid();
-    bpf_trace_printk("tracing on thread %d\\n", pid);
     tracing.lookup_or_init(&pid, &start_ts); 
     return 0;
 } 
@@ -63,7 +62,6 @@ int execstats_addmemoryuse(struct pt_regs *ctx)
     // is this thread executing a query we care about?
     if (!tracing.lookup(&pid)) 
     {
-        bpf_trace_printk("addmemory missed, pid=%d\\n", pid);
         return 0;
     }
 
@@ -98,9 +96,9 @@ int queryend(struct pt_regs *ctx)
 """
 
 u = USDT(path=args.bin_path)
-u.enable_probe(probe="querystart", fn_name="querystart")
-u.enable_probe(probe="execstats_addmemoryuse", fn_name="execstats_addmemoryuse")
-u.enable_probe(probe="queryend", fn_name="queryend")
+u.enable_probe(probe="query__start", fn_name="querystart")
+u.enable_probe(probe="execstats__addmemoryuse", fn_name="execstats_addmemoryuse")
+u.enable_probe(probe="query__done", fn_name="queryend")
 
 replacements = {}
 

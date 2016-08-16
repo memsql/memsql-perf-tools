@@ -53,7 +53,7 @@ BPF_HASH(vruntime, u32); // pid -> vruntime
 int querystart(struct pt_regs *ctx, int __loc_id)
 {
     u64 arg2;
-    bpf_usdt_readarg(2, ctx, &arg2);
+    bpf_usdt_readarg(4, ctx, &arg2);
 
     PLANID_FILTER
 
@@ -362,8 +362,8 @@ int trace_update_stats_wait_end(struct pt_regs *regs)
 """
 
 u = USDT(path=args.bin_path)
-u.enable_probe(probe="querystart", fn_name="querystart")
-u.enable_probe(probe="queryend", fn_name="queryend")
+u.enable_probe(probe="query__start", fn_name="querystart")
+u.enable_probe(probe="query__done", fn_name="queryend")
 
 replacements = {}
 
@@ -387,7 +387,9 @@ b.attach_tracepoint("sched:sched_stat_blocked", "trace_blocked")
 b.attach_tracepoint("sched:sched_stat_iowait", "trace_io")
 
 if args.planid is not None:
-    print("Tracing plan ID %d" % args.planid)
+    print("Tracing plan ID %d... ^C to exit" % args.planid)
+else:
+    print("Tracing... ^C to exit")
 
 try:
     while True:
