@@ -109,7 +109,7 @@ replaced by a trap into the kernel to trigger the instrumentation code. The
 instrumentation code can access the probe's parameters.
 
 To add a probe, you must `#include <sys/sdt.h>`. This header requires the
-Systemtap development package which has been added to the Dockerfile. Note that
+Systemtap development package. Note that
 there is no dependency whatsoever on Systemtap itself other than this simple
 header file which defines a few standard macros used by many tools.
 
