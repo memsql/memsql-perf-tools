@@ -119,7 +119,9 @@ not have the proper configs for them.
 You can rule this out by using ftrace to trace the same tracepoint or kprobe you
 are working with. This will let you see if the probe is actually getting hit or
 not, as the default for ftrace is to just print out the number of hits. See the
-kernel documentation for ftrace for how to do this [5].
+[kernel documentation for ftrace]
+(https://www.kernel.org/doc/Documentation/trace/ftrace.txt) for how to do this 
+[5].
 
 You can also just change the aggregation code in your script to be a
 `bpf_trace_printk()` call to see if the thing is actually firing. 
