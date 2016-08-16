@@ -124,6 +124,12 @@ kernel documentation for ftrace for how to do this [5].
 You can also just change the aggregation code in your script to be a
 `bpf_trace_printk()` call to see if the thing is actually firing. 
 
+Make sure that the arguments to your instrumentation functions are correct; I
+found that two of my (USDT) snapshot probes were not firing because I had
+declared as arguments to the instrumentation function the parameters to the
+probe, whereas I should have just had one parameter (`pt_regs *ctx`) and
+accessed the parameters with `bpf_usdt_readarg`.
+
 There was one bug I (Kyle) had where I had `CONFIG_SCHEDSTATS`, and ftrace
 reported the probes were being hit, but my instrumentation was not being run (at
 least it appeared that so; they were simple counters). Also, the `futexes.py`
