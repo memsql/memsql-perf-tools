@@ -48,8 +48,9 @@ Scripts that work:
 * `partition.py` - Traces the probes for all the low-level commands in the 
   clustering / partition sharding code. Make sure you point it at the exact
   binary from which the node you want to trace was launched. See the help for
-  this tool, or [the MemSQL BPF doc's](docs/02_bpf.md) debugging section for 
-  more info.
+  this tool, or [the MemSQL BPF doc's debugging section]
+  (docs/02_bpf.md#your-probe-which-counts-something-like-probe-hits-attaches-without-errors-but-it-is-reporting-a-count-of-0)
+  for more info.
 
 Scripts that don't work: 
 
