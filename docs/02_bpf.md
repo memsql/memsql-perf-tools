@@ -141,7 +141,8 @@ cluster, you know which node will exercise the logic you want to trace. You must
 pass a path to the real path from which that binary was launched, not an
 identical binary elsewhere. Or, use the pid. I do not know why an identical
 binary elsewere does not work; but I guess you cannot trace all USDT probes
-across a system with multiple binaries having the same USDT probes. 
+across a system with multiple binaries having the same USDT probes without one
+tracing script attached to each of the binaries. 
 
 There was one bug I (Kyle) had where I had `CONFIG_SCHEDSTATS`, and ftrace
 reported the probes were being hit, but my instrumentation was not being run (at
