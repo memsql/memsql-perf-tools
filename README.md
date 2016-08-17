@@ -45,11 +45,14 @@ Scripts that work:
 * `futexes.py` - traces futex syscalls' latencies. Can filter on process and
   query plan ID. Note that when filtering it tends to hang after a few seconds.
   Not sure why.  
+* `partition.py` - Traces the probes for all the low-level commands in the 
+  clustering / partition sharding code. Make sure you point it at the exact
+  binary from which the node you want to trace was launched. See the help for
+  this tool, or [the MemSQL BPF doc's](docs/02_bpf.md) debugging section for 
+  more info.
 
 Scripts that don't work: 
 
-* `partition.py` - Does not work, not sure why. Traces the probes for all the
-  low-level commands in the clustering / partition sharding code.
 * `query_bio.py` - Derived from the bcc `biosnoop` utility, but
   augmented to support filtering based on query.  
 * `query_tsa.py` - A script for thread-state analysis. For some

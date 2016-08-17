@@ -132,6 +132,17 @@ declared as arguments to the instrumentation function the parameters to the
 probe, whereas I should have just had one parameter (`pt_regs *ctx`) and
 accessed the parameters with `bpf_usdt_readarg`.
 
+It may be that ftrace as well (via `/sys/kernel/debug/tracing/uprobe_profile`)
+is reporting that you have USDT (uprobes) attached, but they are not being hit.
+You are also not seeing anything from your BPF script, which is why you looked
+to ftrace in the first place. It may be that you are tracing the wrong binary. I
+discovered this when running `partition.py`. Make sure that if you are running a
+cluster, you know which node will exercise the logic you want to trace. You must
+pass a path to the real path from which that binary was launched, not an
+identical binary elsewhere. Or, use the pid. I do not know why an identical
+binary elsewere does not work; but I guess you cannot trace all USDT probes
+across a system with multiple binaries having the same USDT probes. 
+
 There was one bug I (Kyle) had where I had `CONFIG_SCHEDSTATS`, and ftrace
 reported the probes were being hit, but my instrumentation was not being run (at
 least it appeared that so; they were simple counters). Also, the `futexes.py`
