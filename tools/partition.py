@@ -15,12 +15,22 @@ from bcc import BPF, DEBUG_PREPROCESSOR, DEBUG_BPF, USDT
 
 parser = argparse.ArgumentParser(
         description="Trace partition events. "
-        "Must be run with root privileges.")
-parser.add_argument("bin_path", help="path to the memsqld binary being "
-        "instrumented")
+        "Must be run with root privileges. You must pass either --pid or "
+        "--path. Note that if you use --path or --pid, make sure you point it "
+        "at the node which will be running these low-level commands. For "
+        "--path, you cannot pass it a copy of the binary, but rather the real "
+        "path of the binary running which you would like to trace. This means "
+        "that you cannot just have one of these scripts going to capture all "
+        "the nodes running on a single box. I do not know why this is.")
+
+parser.add_argument("--path", type=str)
+parser.add_argument("--pid", type=int)
 parser.add_argument("-d", "--debug", help="print the instrumentation program "
         "in C and BPF assembly", action="count")
 args = parser.parse_args()
+
+if args.path is None and args.pid is None:
+    exit("You need to pass either --pid or --path")
 
 # for BPF syscalls
 if os.geteuid() != 0:
@@ -48,7 +58,7 @@ probe_names = [
 
 probe_text = \
 """
-int NAME(struct pt_regs *ctx, int __loc_id)
+int NAME(struct pt_regs *ctx)
 {
     char *arg1;
     u64 arg2;
@@ -67,7 +77,11 @@ probes = {}
 all_probes_text = ""
 all_thunks_text = ""
 
-u = USDT(path=args.bin_path)
+if args.pid is not None:
+    u = USDT(pid=args.pid)
+else:
+    u = USDT(path=args.path)
+
 for name in probe_names:
     t = probe_text.replace("NAME", name)
     all_probes_text += t
@@ -85,6 +99,8 @@ debug = DEBUG_PREPROCESSOR|DEBUG_BPF if args.debug > 1 else 0
 b = BPF(text=text, debug=debug, usdt=u)
 #for (_, p) in probes.iteritems():
 #    p.attach(b, debug=args.debug>0)
+
+print("Tracing... ^C to exit")
 
 try:
     while True:
